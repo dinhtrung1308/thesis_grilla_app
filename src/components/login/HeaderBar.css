@@ -1,0 +1,20 @@
+.header-bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-left: 10rem;
+  margin-right: 10rem;
+  margin-top: 1rem;
+  margin-bottom: 3rem;
+}
+.nav-bar {
+  display: flex;
+  justify-content: space-between;
+  flex-direction: row;
+}
+button.MuiTypography-root.MuiTypography-body2.MuiLink-root.MuiLink-underlineAlways.MuiLink-button.css-1uz9xvc-MuiTypography-root-MuiLink-root {
+  margin-right: 2rem;
+  text-decoration: none;
+  font-size: 1.5rem;
+}
