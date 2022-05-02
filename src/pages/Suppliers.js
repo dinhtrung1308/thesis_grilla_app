@@ -50,7 +50,6 @@ const StyledPage = styled(Page)({
 });
 
 // ----------------------------------------------------------------------
-const TOKEN = sessionStorage.getItem('token');
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -80,7 +79,9 @@ function a11yProps(index) {
 }
 async function acceptInvoice(obj) {
   const idInvoice = localStorage.getItem('idInvoice');
-  return fetch(`http://103.116.105.48:3000/inventory/invoice/accept/${idInvoice}`, {
+  const TOKEN = sessionStorage.getItem('token');
+
+  return fetch(`http://103.116.105.48/api/inventory/invoice/accept/${idInvoice}`, {
     method: 'PATCH',
     headers: {
       Authorization: `Bearer ${TOKEN}`,
@@ -104,7 +105,7 @@ export default function Suppliers() {
   };
 
   const getSuppliers = async () => {
-    const response = await fetch('http://103.116.105.48:3000/supplier', {
+    const response = await fetch('http://103.116.105.48/api/supplier', {
       method: 'GET',
       headers: new Headers({
         Authorization: `Bearer ${token}`,
@@ -115,7 +116,7 @@ export default function Suppliers() {
     setSuppliers(FinalData);
   };
   const getInvoiceHistory = async () => {
-    const response = await fetch('http://103.116.105.48:3000/inventory/invoice', {
+    const response = await fetch('http://103.116.105.48/api/inventory/invoice', {
       method: 'GET',
       headers: new Headers({
         Authorization: `Bearer ${token}`,
@@ -259,13 +260,20 @@ export default function Suppliers() {
                         </Typography>
                       </TableCell>
                       <TableCell>
-                        <IconButton
-                          aria-label="update"
-                          onClick={() => handleUpdateStatus(item.invoceId)}
-                          size="large"
-                        >
-                          <CheckIcon />
-                        </IconButton>
+                        {(() => {
+                          if (item.status === 'On Delivery') {
+                            return (
+                              <IconButton
+                                aria-label="update"
+                                onClick={() => handleUpdateStatus(item.invoceId)}
+                                size="large"
+                              >
+                                <CheckIcon />
+                              </IconButton>
+                            );
+                          }
+                          return <Typography />;
+                        })()}
                       </TableCell>
                     </TableRow>
                   ))}

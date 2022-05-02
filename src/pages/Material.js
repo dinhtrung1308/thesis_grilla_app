@@ -79,10 +79,10 @@ const style = {
   boxShadow: 24,
   p: 4
 };
-const token = sessionStorage.getItem('token');
-
 async function createIngredientFunction(obj) {
-  return fetch('http://103.116.105.48:3000/inventory/ingredient', {
+  const token = sessionStorage.getItem('token');
+
+  return fetch('http://103.116.105.48/api/inventory/ingredient', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -99,7 +99,8 @@ async function createIngredientFunction(obj) {
     });
 }
 async function orderFunction(obj) {
-  return fetch('http://103.116.105.48:3000/inventory/invoice', {
+  const token = sessionStorage.getItem('token');
+  return fetch('http://103.116.105.48/api/inventory/invoice', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -110,8 +111,10 @@ async function orderFunction(obj) {
 }
 async function deleteIngredientFunction(obj) {
   const ID = localStorage.getItem('id');
+  const token = sessionStorage.getItem('token');
+
   console.log(ID);
-  return fetch(`http://103.116.105.48:3000/inventory/ingredient/${ID}`, {
+  return fetch(`http://103.116.105.48/api/inventory/ingredient/${ID}`, {
     method: 'DELETE',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -122,7 +125,9 @@ async function deleteIngredientFunction(obj) {
 }
 async function setSupplierFunction(obj) {
   const idSupplier = localStorage.getItem('idSupplier');
-  return fetch(`http://103.116.105.48:3000/inventory/ingredient/set-supplier/${idSupplier}`, {
+  const token = sessionStorage.getItem('token');
+
+  return fetch(`http://103.116.105.48/api/inventory/ingredient/set-supplier/${idSupplier}`, {
     method: 'PATCH',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -161,7 +166,7 @@ export default function Material() {
   };
   const token = sessionStorage.getItem('token');
   const getIngredients = async () => {
-    const response = await fetch('http://103.116.105.48:3000/inventory/ingredient', {
+    const response = await fetch('http://103.116.105.48/api/inventory/ingredient', {
       method: 'GET',
       headers: new Headers({
         Authorization: `Bearer ${token}`,
@@ -172,7 +177,7 @@ export default function Material() {
     setIngredients(FinalData);
   };
   const getActivityRecord = async () => {
-    const response = await fetch('http://103.116.105.48:3000/inventory/stock-change', {
+    const response = await fetch('http://103.116.105.48/api/inventory/stock-change', {
       method: 'GET',
       headers: new Headers({
         Authorization: `Bearer ${token}`,
@@ -190,7 +195,7 @@ export default function Material() {
     getActivityRecord();
   }, [refresh]);
   const getSuppliers = async () => {
-    const response = await fetch('http://103.116.105.48:3000/supplier', {
+    const response = await fetch('http://103.116.105.48/api/supplier', {
       method: 'GET',
       headers: new Headers({
         Authorization: `Bearer ${token}`,

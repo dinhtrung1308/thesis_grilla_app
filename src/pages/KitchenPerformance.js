@@ -52,7 +52,7 @@ export default function KithenPerformance() {
   const token = sessionStorage.getItem('token');
   // console.log(token);
   const getAspects = async () => {
-    const response = await fetch('http://103.116.105.48:3000/performance/feedback', {
+    const response = await fetch('http://103.116.105.48/api/performance/feedback', {
       method: 'GET',
       headers: new Headers({
         Authorization: `Bearer ${token}`,
@@ -63,7 +63,7 @@ export default function KithenPerformance() {
     setAspects(FinalData);
   };
   const getData = async () => {
-    const response = await fetch('http://103.116.105.48:3000/performance/order?start=2022-4-14', {
+    const response = await fetch('http://103.116.105.48/api/performance/order?start=2022-4-14', {
       method: 'GET',
       headers: new Headers({
         Authorization: `Bearer ${token}`,
@@ -74,7 +74,7 @@ export default function KithenPerformance() {
     setDataOrders(FinalData);
   };
   const getFeedbackList = async () => {
-    const response = await fetch('http://103.116.105.48:3000/performance/feedback-list', {
+    const response = await fetch('http://103.116.105.48/api/performance/feedback-list', {
       method: 'GET',
       headers: new Headers({
         Authorization: `Bearer ${token}`,

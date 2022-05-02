@@ -44,7 +44,7 @@ export default function AppWeeklySales() {
       </IconWrapperStyle>
       <Typography variant="h3">{fShortenNumber(TOTAL)}</Typography>
       <Typography variant="subtitle2" sx={{ opacity: 0.72 }}>
-        Weekly Sales
+        Daily Order Sales
       </Typography>
     </RootStyle>
   );

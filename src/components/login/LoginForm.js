@@ -13,7 +13,7 @@ toast.configure();
 
 // components
 async function loginUser(credentials) {
-  return fetch('http://103.116.105.48:3000/auth/signin', {
+  return fetch('http://103.116.105.48/api/auth/signin', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'

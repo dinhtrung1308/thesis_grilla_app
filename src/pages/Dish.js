@@ -121,10 +121,10 @@ const style2 = {
   boxShadow: 24,
   p: 4
 };
-const TOKEN = sessionStorage.getItem('token');
 
 async function createDishFunction(obj) {
-  return fetch('http://103.116.105.48:3000/dish', {
+  const TOKEN = sessionStorage.getItem('token');
+  return fetch('http://103.116.105.48/api/dish', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${TOKEN}`,
@@ -135,7 +135,8 @@ async function createDishFunction(obj) {
 }
 
 async function createCategoryFunction(obj) {
-  return fetch('http://103.116.105.48:3000/dish/category', {
+  const TOKEN = sessionStorage.getItem('token');
+  return fetch('http://103.116.105.48/api/dish/category', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${TOKEN}`,
@@ -146,7 +147,8 @@ async function createCategoryFunction(obj) {
 }
 async function deleteDishFunction(obj) {
   const idDish = localStorage.getItem('idDish');
-  return fetch(`http://103.116.105.48:3000/dish/${idDish}`, {
+  const TOKEN = sessionStorage.getItem('token');
+  return fetch(`http://103.116.105.48/api/dish/${idDish}`, {
     method: 'DELETE',
     headers: {
       Authorization: `Bearer ${TOKEN}`,
@@ -185,6 +187,8 @@ export default function Dish() {
   const [openSetCategory, setOpenSetCategory] = useState(false);
   const [estimatedCookingTime, setEstimatedCookingTime] = useState(0);
   const token = sessionStorage.getItem('token');
+  const TOKEN = sessionStorage.getItem('token');
+
   const handleOpenCreateCategory = () => setOpenCategory(true);
   const handleOpenCreateDish = () => setOpen(true);
   const handleOpenSetCategory = (id) => {
@@ -213,7 +217,7 @@ export default function Dish() {
     setExpanded(!expanded);
   };
   const getDish = async () => {
-    const response = await fetch(`http://103.116.105.48:3000/dish?categoryName=${typeName}`, {
+    const response = await fetch(`http://103.116.105.48/api/dish?categoryName=${typeName}`, {
       method: 'GET',
       headers: new Headers({
         Authorization: `Bearer ${token}`,
@@ -225,7 +229,7 @@ export default function Dish() {
   };
   const getDishIngredigent = async () => {
     const id = localStorage.getItem('idIndex');
-    const response = await fetch(`http://103.116.105.48:3000/dish/${id}`, {
+    const response = await fetch(`http://103.116.105.48/api/dish/${id}`, {
       method: 'GET',
       headers: new Headers({
         Authorization: `Bearer ${token}`,
@@ -237,7 +241,7 @@ export default function Dish() {
     setDishIngredient(FinalData);
   };
   const getIngredients = async () => {
-    const response = await fetch('http://103.116.105.48:3000/inventory/ingredient', {
+    const response = await fetch('http://103.116.105.48/api/inventory/ingredient', {
       method: 'GET',
       headers: new Headers({
         Authorization: `Bearer ${token}`,
@@ -248,7 +252,7 @@ export default function Dish() {
     setIngredients(FinalData);
   };
   const getOptionsFilter = async () => {
-    const response = await fetch('http://103.116.105.48:3000/dish/category/get', {
+    const response = await fetch('http://103.116.105.48/api/dish/category/get', {
       method: 'GET',
       headers: new Headers({
         Authorization: `Bearer ${token}`,
@@ -290,13 +294,13 @@ export default function Dish() {
     const requestOptions = {
       method: 'PATCH',
       headers: {
-        Authorization: `Bearer ${TOKEN}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ title: 'Set Category' })
     };
     const response = await fetch(
-      `http://103.116.105.48:3000/dish/category/${updatedCategory}/${upDish}`,
+      `http://103.116.105.48/api/dish/category/${updatedCategory}/${upDish}`,
       requestOptions
     );
 
@@ -472,6 +476,7 @@ export default function Dish() {
           {dish?.map((elementDish) => (
             <Grid item xs={12} sm={6} md={3} key={elementDish.id}>
               <Card sx={{ maxWidth: 345 }}>
+                <CardHeader title={elementDish.name} />
                 <div
                   style={{
                     display: 'flex',
@@ -480,7 +485,12 @@ export default function Dish() {
                     justifyContent: 'space-between'
                   }}
                 >
-                  <CardHeader title={elementDish.name} />
+                  <Typography marginLeft={3}>
+                    {'Category : '}
+                    {elementDish.dishCategory === null
+                      ? 'Undefined'
+                      : elementDish.dishCategory.name}
+                  </Typography>
                   <IconButton
                     aria-label="edit"
                     onClick={() => handleOpenSetCategory(elementDish.id)}
@@ -489,11 +499,6 @@ export default function Dish() {
                     <EditIcon />
                   </IconButton>
                 </div>
-                <Typography marginLeft={3}>
-                  {'Category : '}
-                  {elementDish.dishCategory === null ? 'Undefined' : elementDish.dishCategory.name}
-                </Typography>
-
                 <CardMedia component="img" height="194" image={dishImage} alt="Paella dish" />
                 <CardContent>
                   <Typography gutterBottom variant="h6" component="div">

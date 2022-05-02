@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import useInterval from 'use-interval';
 import { Link as RouterLink } from 'react-router-dom';
 import { createStyles, makeStyles, Theme, styled } from '@mui/material/styles';
 
@@ -49,7 +50,7 @@ import Page from '../components/Page';
 import Iconify from '../components/Iconify';
 
 const PREFIX = 'Order';
-
+localStorage.setItem('idDetails', '');
 const classes = {
   statusOpen: `${PREFIX}-statusOpen`,
   statusClose: `${PREFIX}-statusClose`,
@@ -144,7 +145,6 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
     border: 0
   }
 }));
-const TOKEN = sessionStorage.getItem('token');
 function a11yProps(index) {
   return {
     id: `simple-tab-${index}`,
@@ -152,7 +152,9 @@ function a11yProps(index) {
   };
 }
 async function createOrderFunction(obj) {
-  return fetch('http://103.116.105.48:3000/order', {
+  const TOKEN = sessionStorage.getItem('token');
+
+  return fetch('http://103.116.105.48/api/order', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${TOKEN}`,
@@ -162,8 +164,10 @@ async function createOrderFunction(obj) {
   });
 }
 async function deleteOrderFunction(obj) {
+  const TOKEN = sessionStorage.getItem('token');
+
   const idOrder = localStorage.getItem('idOrder');
-  return fetch(`http://103.116.105.48:3000/order/${idOrder}`, {
+  return fetch(`http://103.116.105.48/api/order/${idOrder}`, {
     method: 'DELETE',
     headers: {
       Authorization: `Bearer ${TOKEN}`,
@@ -174,7 +178,9 @@ async function deleteOrderFunction(obj) {
 }
 async function updateStatusO2I(obj) {
   const idOrder = localStorage.getItem('idOrder');
-  return fetch(`http://103.116.105.48:3000/order/accept_order/${idOrder}`, {
+  const TOKEN = sessionStorage.getItem('token');
+
+  return fetch(`http://103.116.105.48/api/order/accept_order/${idOrder}`, {
     method: 'PATCH',
     headers: {
       Authorization: `Bearer ${TOKEN}`,
@@ -185,7 +191,9 @@ async function updateStatusO2I(obj) {
 }
 async function updateStatusI2F(obj) {
   const idOrder = localStorage.getItem('idOrder');
-  return fetch(`http://103.116.105.48:3000/order/finish_order/${idOrder}`, {
+  const TOKEN = sessionStorage.getItem('token');
+
+  return fetch(`http://103.116.105.48/api/order/finish_order/${idOrder}`, {
     method: 'PATCH',
     headers: {
       Authorization: `Bearer ${TOKEN}`,
@@ -193,6 +201,11 @@ async function updateStatusI2F(obj) {
     },
     body: JSON.stringify(obj)
   });
+}
+function millisToMinutesAndSeconds(millis) {
+  const minutes = Math.floor(millis / 60000);
+  const seconds = ((millis % 60000) / 1000).toFixed(0);
+  return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 }
 function getCurrentDate() {
   const d = new Date();
@@ -211,12 +224,21 @@ function c() {
 
   return d;
 }
+function convertStringToMili(time) {
+  const res = new Date(time);
+  return res.getTime();
+}
 // ----------------------------------------------------------------------
 export default function Order() {
   const [value, setValue] = React.useState(0);
+  const [now, setNow] = useState(new Date());
   const [status, setStatus] = useState('');
   const [startDay, setStartDay] = useState(getCurrentDate);
   const [endDay, setEndDay] = useState(getCurrentDate);
+  const [countUpStart, setCountUpStart] = useState(getCurrentTime);
+  const [countUpEnd, setCountUpEnd] = useState(getCurrentTime);
+
+  const [orderDishId, setOrderDishId] = useState('');
   const handleChangeTab = (event, newValue) => {
     setValue(newValue);
   };
@@ -250,14 +272,17 @@ export default function Order() {
     setIndex(1);
     setCounts([1]);
   };
-  const handleCloseDetails = () => setDetailsOpen(false);
+  const handleCloseDetails = () => {
+    setDetailsOpen(false);
+    setRefresh(true);
+  };
 
   const handleExpandClick = (idDishIngredient) => {
     console.log(idDishIngredient);
     setExpanded(!expanded);
   };
   const getOrders = async () => {
-    const response = await fetch('http://103.116.105.48:3000/order?status=open', {
+    const response = await fetch('http://103.116.105.48/api/order?status=open', {
       method: 'GET',
       headers: new Headers({
         Authorization: `Bearer ${token}`,
@@ -268,7 +293,7 @@ export default function Order() {
     setOrders(FinalData);
   };
   const getOrdersInProgress = async () => {
-    const response = await fetch('http://103.116.105.48:3000/order?status=processing', {
+    const response = await fetch('http://103.116.105.48/api/order?status=processing', {
       method: 'GET',
       headers: new Headers({
         Authorization: `Bearer ${token}`,
@@ -280,7 +305,7 @@ export default function Order() {
   };
   const getOrdersFinished = async () => {
     const response = await fetch(
-      `http://103.116.105.48:3000/order?status=finished&start=${startDay}&end=${endDay}`,
+      `http://103.116.105.48/api/order?status=finished&start=${startDay}&end=${endDay}`,
       {
         method: 'GET',
         headers: new Headers({
@@ -294,7 +319,7 @@ export default function Order() {
   };
   const getDetails = async () => {
     const idDetails = localStorage.getItem('idDetails');
-    const response = await fetch(`http://103.116.105.48:3000/order/${idDetails}`, {
+    const response = await fetch(`http://103.116.105.48/api/order/${idDetails}`, {
       method: 'GET',
       headers: new Headers({
         Authorization: `Bearer ${token}`,
@@ -306,7 +331,7 @@ export default function Order() {
   };
   // const getDishIngredigent = async () => {
   //   const id = localStorage.getItem('idIndex');
-  //   const response = await fetch(`http://103.116.105.48:3000/dish/${id}`, {
+  //   const response = await fetch(`http://103.116.105.48/dish/${id}`, {
   //     method: 'GET',
   //     headers: new Headers({
   //       Authorization: `Bearer ${token}`,
@@ -318,7 +343,7 @@ export default function Order() {
   //   setDishIngredient(FinalData);
   // };
   const getListDish = async () => {
-    const response = await fetch('http://103.116.105.48:3000/dish', {
+    const response = await fetch('http://103.116.105.48/api/dish', {
       method: 'GET',
       headers: new Headers({
         Authorization: `Bearer ${token}`,
@@ -328,7 +353,52 @@ export default function Order() {
     const FinalData = await response.json();
     setListDish(FinalData);
   };
+  const handlePatchStartTime = async () => {
+    const requestOptions = {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        time: moment(countUpStart).format('YYYY-MM-DDTHH:mm:ss')
+      })
+    };
+    const response = await fetch(
+      `http://103.116.105.48/api/order/start/${orderDishId}`,
+      requestOptions
+    );
 
+    if (response.ok) {
+      setRefresh(true);
+      setOrderDishId('');
+    } else {
+      toast.error('Cannot Cook !', { autoClose: 1000 });
+    }
+  };
+  const handlePatchEndTime = async () => {
+    const requestOptions = {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        time: moment(countUpEnd).format('YYYY-MM-DDTHH:mm:ss')
+      })
+    };
+    const response = await fetch(
+      `http://103.116.105.48/api/order/end/${orderDishId}`,
+      requestOptions
+    );
+
+    if (response.ok) {
+      setRefresh(true);
+      setOrderDishId('');
+    } else {
+      toast.error('Cannot Cook !', { autoClose: 1000 });
+    }
+  };
   useEffect(() => {
     if (orders.length && !refresh) {
       return;
@@ -340,14 +410,16 @@ export default function Order() {
     getDetails();
   }, [refresh]);
   useEffect(() => {
-    const interval = setInterval(() => {
-      console.log(c());
-      console.log(getCurrentTime());
-      console.log(Math.abs(getCurrentTime() - c()));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-  useEffect(() => {});
+    if (refresh) {
+      setTimeout(() => {
+        setRefresh(false);
+      }, 50);
+    }
+  }, [refresh]);
+  useInterval(() => {
+    // Your custom logic here
+    setNow(getCurrentTime());
+  }, 1000);
   //   const customInput = (counts) => {
   //     counts.map((a) => {
   //       <IngredientInputList key={a.index} item={a} />;
@@ -404,6 +476,7 @@ export default function Order() {
     console.log(idOrder);
     localStorage.setItem('idOrder', idOrder);
     const message = await updateStatusI2F({});
+    console.log(message.message);
     if (message.ok) {
       toast.success('Update Successfully!', { autoClose: 1000 });
       setRefresh(true);
@@ -893,10 +966,71 @@ export default function Order() {
               Order Details
             </Typography>
             {details.orderDishs?.map((item, index) => (
-              <Typography id="modal-modal-description" sx={{ mt: 2 }} key={index}>
-                {index + 1}
-                {'.   '} {item.dish.name} {'               x '} {item.amount}
-              </Typography>
+              <Grid
+                container
+                direction="row"
+                justifyContent="center"
+                alignItems="baseline"
+                spacing={2}
+                key={index}
+              >
+                <Grid item xs={4} sm={4} md={4}>
+                  <Typography id="modal-modal-description" sx={{ mt: 2 }}>
+                    {index + 1}
+                    {'.   '} {item.dish.name} {'               x '} {item.amount}
+                  </Typography>
+                </Grid>
+                <Grid item xs={2} sm={2} md={2}>
+                  <Typography>Cooking Time: </Typography>
+                </Grid>
+                <Grid item xs={2} sm={2} md={2}>
+                  {(() => {
+                    if (value === 1 && item.startCook !== null && item.finishCook === null) {
+                      return (
+                        <Typography>
+                          {millisToMinutesAndSeconds(
+                            now.getTime() - convertStringToMili(item.startCook)
+                          )}
+                        </Typography>
+                      );
+                    }
+                    if (value === 1 && item.cookingTime) {
+                      return <Typography>{item.cookingTime}</Typography>;
+                    }
+                  })()}
+                </Grid>
+                <Grid item xs={4} sm={4} md={4}>
+                  {/* <Button onClick={() => console.log(String(item.orderDishId))}>Start</Button> */}
+                  {(() => {
+                    if (value === 1 && item.startCook === null) {
+                      return (
+                        <Button
+                          onClick={() => {
+                            setCountUpStart(new Date());
+                            setOrderDishId(item.orderDishId);
+                            handlePatchStartTime();
+                          }}
+                        >
+                          Start
+                        </Button>
+                      );
+                    }
+                    if (value === 1 && item.finishCook === null && item.startCook !== null) {
+                      return (
+                        <Button
+                          onClick={() => {
+                            setCountUpEnd(new Date());
+                            setOrderDishId(item.orderDishId);
+                            handlePatchEndTime();
+                          }}
+                        >
+                          End
+                        </Button>
+                      );
+                    }
+                  })()}
+                </Grid>
+              </Grid>
             ))}
           </Box>
         </Modal>
