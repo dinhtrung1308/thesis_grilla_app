@@ -1,14 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-
+import { axios } from 'axios';
 // materialimport React, { useState } from 'react';
-import { Box, Grid, Container, Typography, Stack } from '@mui/material';
+import { Box, Grid, Container, Typography, Stack, TextField } from '@mui/material';
 import Divider from '@mui/material/Divider';
 import moment from 'moment';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  PointElement,
+  LineElement
+} from 'chart.js';
+import { Bar, Line } from 'react-chartjs-2';
 
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
+import CardHeader from '@mui/material/CardHeader';
+import DatePicker from '@mui/lab/DatePicker';
+import AdapterDateFns from '@mui/lab/AdapterDateFns';
+import { LocalizationProvider } from '@mui/lab';
 import CardMedia from '@mui/material/CardMedia';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
@@ -38,13 +54,68 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'light' ? '#1a90ff' : '#308fe8'
   }
 }));
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
+export const options = {
+  responsive: true,
+  plugins: {
+    legend: {
+      position: 'top'
+    },
+    title: {
+      display: true,
+      text: 'Total Order per Day'
+    },
+    scales: {
+      y: [
+        {
+          grid: {
+            drawOnChartArea: false
+          }
+        }
+      ]
+    }
+  }
+};
+
+function getCurrentDate() {
+  const d = new Date();
+  const currentDate = String(d.getDate());
+  const currentMonth = String(d.getMonth() + 1);
+  const currentYear = String(d.getFullYear());
+  const today = currentYear.concat('-', currentMonth, '-', currentDate);
+  return today;
+}
+function get7PreviousDay() {
+  const sevenDays = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000);
+  const last7Date = String(sevenDays.getDate());
+  const changeMonth = String(sevenDays.getMonth() + 1);
+  const currentYear = String(sevenDays.getFullYear());
+  const preDays = currentYear.concat('-', changeMonth, '-', last7Date);
+
+  return preDays;
+}
 export default function KithenPerformance() {
   const [valueIndexTab, setValueIndexTab] = React.useState('1');
+  const [startDayGraph1, setStartDayGraph1] = useState(get7PreviousDay);
+  const [endDayGraph1, setEndDayGraph1] = useState(getCurrentDate);
   const [aspects, setAspects] = useState([]);
   const [feedbackList, setFeedbackList] = useState([]);
   const [clientList, setClientList] = useState([]);
   const [refresh, setRefresh] = useState(false);
   const [dataOrders, setDataOrders] = useState([]);
+  const [chartData1Tab2, setChartData1Tab2] = useState({});
+  const [chartData2Tab2, setChartData2Tab2] = useState({});
+  const [totalOrders, setTotalOrders] = useState([]);
+  const [dateArrays, setDateArrays] = useState([]);
   const handleChangeTab = (event, newValue) => {
     setValueIndexTab(newValue);
   };
@@ -82,14 +153,69 @@ export default function KithenPerformance() {
       })
     });
     const FinalData = await response.json();
-    sessionStorage.setItem('feedbackList', JSON.stringify(FinalData));
   };
-  const fList = JSON.parse(sessionStorage.getItem('feedbackList'));
+  const fList = [];
+  const chart = async () => {
+    let totalOrders = [];
+    let dateArrays = [];
+    let totalIncome = [];
+    const response = await fetch(
+      `http://103.116.105.48/api/performance/order-amount-by-day?start=${startDayGraph1}&end=${endDayGraph1}`,
+      {
+        method: 'GET',
+        headers: new Headers({
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        })
+      }
+    );
+    const FinalData = await response.json();
+    totalOrders = FinalData.amount;
+    dateArrays = FinalData.dates;
+    totalIncome = FinalData.profit;
+    if (response.ok) {
+      setChartData1Tab2({
+        labels: dateArrays,
+        datasets: [
+          {
+            label: 'Number of Orders',
+            data: totalOrders,
+            borderColor: '#FFD992',
+            backgroundColor: '#FFD992',
+            borderWidth: 4
+          }
+        ]
+      });
+      setChartData2Tab2({
+        labels: dateArrays,
+        datasets: [
+          {
+            label: 'Total Income ($)',
+            data: totalIncome,
+            borderColor: 'rgb(53, 162, 235)',
+            backgroundColor: 'rgba(53, 162, 235, 0.5)',
+            borderWidth: 4
+          }
+        ]
+      });
+    }
+  };
+
+  useEffect(() => {
+    chart();
+  }, [refresh]);
   useEffect(() => {
     getFeedbackList();
     getAspects();
     getData();
   }, []);
+  useEffect(() => {
+    if (refresh) {
+      setTimeout(() => {
+        setRefresh(false);
+      }, 50);
+    }
+  }, [refresh]);
   return (
     <Page title="Material">
       <Container maxWidth="xl">
@@ -433,12 +559,65 @@ export default function KithenPerformance() {
               </Container>
             </TabPanel>
             <TabPanel value="2">
-              <Typography>Total Orders:</Typography>
+              {/* <Typography>Total Orders:</Typography>
               <Typography>{dataOrders.orderAmount}</Typography>
               <Typography>Total Income:</Typography>
               <Typography>
                 {dataOrders.retailPrice} {' $'}
-              </Typography>
+              </Typography> */}
+              <Card style={{ marginTop: 40 }}>
+                <CardHeader title="Total Orders and Income" />
+                <Grid container direction="row-reverse" alignItems="center">
+                  <LocalizationProvider dateAdapter={AdapterDateFns}>
+                    <DatePicker
+                      value={endDayGraph1}
+                      onChange={(newValue) => {
+                        setEndDayGraph1(moment(newValue).format('YYYY-MM-DD'));
+                        setRefresh(true);
+                      }}
+                      renderInput={(params) => <TextField {...params} />}
+                    />
+                    <Typography style={{ marginRight: 10, marginLeft: 10 }}>~</Typography>
+                    <DatePicker
+                      value={startDayGraph1}
+                      style={{ size: '10px' }}
+                      onChange={(newValue) => {
+                        setStartDayGraph1(moment(newValue).format('YYYY-MM-DD'));
+                        setRefresh(true);
+                      }}
+                      renderInput={(params) => <TextField {...params} />}
+                    />
+                  </LocalizationProvider>
+                </Grid>
+                <Box sx={{ p: 3, pb: 1 }} dir="ltr">
+                  <Bar options={options} data={chartData1Tab2} />
+                  <Line
+                    options={{
+                      responsive: true,
+                      plugins: {
+                        legend: {
+                          position: 'top'
+                        },
+                        title: {
+                          display: true,
+                          text: 'Total Profit per Day'
+                        },
+                        scales: {
+                          y: [
+                            {
+                              grid: {
+                                drawOnChartArea: false
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }}
+                    data={chartData2Tab2}
+                  />
+                  {/* <Line options={options} data={data} /> */}
+                </Box>
+              </Card>
             </TabPanel>
             <TabPanel value="3">Item Three</TabPanel>
           </TabContext>
