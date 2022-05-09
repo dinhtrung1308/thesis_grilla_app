@@ -33,16 +33,12 @@ export default function Router() {
       ]
     },
     {
-      path: '/login',
-      element: <Login />
-    },
-    {
       path: '/',
       element: <Login />
     },
     {
       path: '/signup',
-      element: <SignUp />
+      element: <Register />
     },
     { path: '*', element: <Navigate to="/404" replace /> }
   ]);

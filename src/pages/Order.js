@@ -235,8 +235,8 @@ export default function Order() {
   const [status, setStatus] = useState('');
   const [startDay, setStartDay] = useState(getCurrentDate);
   const [endDay, setEndDay] = useState(getCurrentDate);
-  const [countUpStart, setCountUpStart] = useState(getCurrentTime);
-  const [countUpEnd, setCountUpEnd] = useState(getCurrentTime);
+  const [countUpStart, setCountUpStart] = useState();
+  const [countUpEnd, setCountUpEnd] = useState();
 
   const [orderDishId, setOrderDishId] = useState('');
   const handleChangeTab = (event, newValue) => {
@@ -354,6 +354,7 @@ export default function Order() {
     setListDish(FinalData);
   };
   const handlePatchStartTime = async () => {
+    const id = localStorage.getItem('orderDishId');
     const requestOptions = {
       method: 'PATCH',
       headers: {
@@ -364,10 +365,7 @@ export default function Order() {
         time: moment(countUpStart).format('YYYY-MM-DDTHH:mm:ss')
       })
     };
-    const response = await fetch(
-      `http://103.116.105.48/api/order/start/${orderDishId}`,
-      requestOptions
-    );
+    const response = await fetch(`http://103.116.105.48/api/order/start/${id}`, requestOptions);
 
     if (response.ok) {
       setRefresh(true);
@@ -377,6 +375,7 @@ export default function Order() {
     }
   };
   const handlePatchEndTime = async () => {
+    const id = localStorage.getItem('orderDishId');
     const requestOptions = {
       method: 'PATCH',
       headers: {
@@ -387,10 +386,7 @@ export default function Order() {
         time: moment(countUpEnd).format('YYYY-MM-DDTHH:mm:ss')
       })
     };
-    const response = await fetch(
-      `http://103.116.105.48/api/order/end/${orderDishId}`,
-      requestOptions
-    );
+    const response = await fetch(`http://103.116.105.48/api/order/end/${id}`, requestOptions);
 
     if (response.ok) {
       setRefresh(true);
@@ -1007,6 +1003,7 @@ export default function Order() {
                         <Button
                           onClick={() => {
                             setCountUpStart(new Date());
+                            localStorage.setItem('orderDishId', item.orderDishId);
                             setOrderDishId(item.orderDishId);
                             handlePatchStartTime();
                           }}
@@ -1020,6 +1017,7 @@ export default function Order() {
                         <Button
                           onClick={() => {
                             setCountUpEnd(new Date());
+                            localStorage.setItem('orderDishId', item.orderDishId);
                             setOrderDishId(item.orderDishId);
                             handlePatchEndTime();
                           }}

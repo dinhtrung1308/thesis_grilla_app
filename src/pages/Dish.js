@@ -185,7 +185,7 @@ export default function Dish() {
   const [dishIngredient, setDishIngredient] = useState([]);
   const [updatedCategory, setUpdatedCategory] = useState('');
   const [openSetCategory, setOpenSetCategory] = useState(false);
-  const [estimatedCookingTime, setEstimatedCookingTime] = useState(0);
+  const [estimatedCookingTime, setEstimatedCookingTime] = useState('');
   const token = sessionStorage.getItem('token');
   const TOKEN = sessionStorage.getItem('token');
 
@@ -580,9 +580,22 @@ export default function Dish() {
               </IconButton>
             </div>
             {/* onSubmit={handleSubmit} */}
-            <form className={classes.createIngredientStyle} onSubmit={handleSubmit}>
+            <form
+              style={{
+                display: 'grid',
+                gap: '40px',
+                alignItems: 'center',
+                boxShadow: '10px 10px 10px 10px #f4f4f4',
+                height: 'max-content',
+                padding: '10px 20px 10px 20px',
+                justifyContent: 'space between',
+                overflow: 'scroll',
+                justifyItems: 'flex-start'
+              }}
+              onSubmit={handleSubmit}
+            >
               <Typography className={classes.title} variant="h4">
-                Add new ingredient
+                Create Dish
               </Typography>
               <TextField
                 id="outlined-helperText"
@@ -700,6 +713,15 @@ export default function Dish() {
                   onChange={(e) => setPrice(Number(e.target.value))}
                 />
               </div>
+              <div style={{ width: '50%', display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Estimated Cooking Time: </Typography>
+                <input
+                  type="time"
+                  step="1"
+                  onChange={(e) => setEstimatedCookingTime(e.target.value)}
+                />
+              </div>
+
               <div style={{ width: '100%' }}>
                 <Button
                   variant="contained"

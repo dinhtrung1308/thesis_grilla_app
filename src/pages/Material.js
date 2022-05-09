@@ -27,6 +27,12 @@ import {
   IconButton,
   Paper
 } from '@mui/material';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
 import Tab from '@mui/material/Tab';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
@@ -139,6 +145,7 @@ async function setSupplierFunction(obj) {
 export default function Material() {
   const [name, setName] = useState();
   const [stock, setStock] = useState();
+  const [updatedStock, setUpdatedStock] = useState();
   const [listSupplier, setListSupplier] = useState([]);
   const [ingredients, setIngredients] = useState([]);
   const [refresh, setRefresh] = useState(false);
@@ -152,6 +159,10 @@ export default function Material() {
   const [amount, setAmount] = useState();
   const [activityRecord, setActivityRecord] = useState([]);
   const [ingredientId, setMaterial] = useState();
+  const [openCategory, setOpenCategory] = React.useState(false);
+
+  const handleOpenCreateCategory = () => setOpenCategory(true);
+
   const handleOpenModal = () => setOpen(true);
   const handleCloseModal = () => setOpen(false);
   const handleCloseSupplier = () => setOpenSupplier(false);
@@ -204,6 +215,31 @@ export default function Material() {
     });
     const FinalData = await response.json();
     setListSupplier(FinalData);
+  };
+  const handleUpdateStock = async () => {
+    const id = localStorage.getItem('ingId');
+    const requestOptions = {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        stock: updatedStock
+      })
+    };
+    const response = await fetch(
+      `http://103.116.105.48/api/inventory/ingredient/${id}`,
+      requestOptions
+    );
+    if (response.ok) {
+      setRefresh(true);
+      setUpdatedStock();
+      localStorage.removeItem('ingId');
+      toast.success('Updated !', { autoClose: 1000 });
+    } else {
+      toast.error('Cannot Update !', { autoClose: 1000 });
+    }
   };
   useEffect(() => {
     if (ingredients.length && !refresh) {
@@ -306,15 +342,27 @@ export default function Material() {
           <Typography variant="h4" gutterBottom>
             Ingredients
           </Typography>
-          <Button
-            variant="contained"
-            // component={RouterLink}
-            // to="#"
-            startIcon={<Iconify icon="eva:plus-fill" />}
-            onClick={handleOpenModal}
-          >
-            New Ingredient
-          </Button>
+          <div>
+            <Button
+              variant="contained"
+              // component={RouterLink}
+              // to="#"
+              startIcon={<Iconify icon="eva:plus-fill" />}
+              onClick={handleOpenModal}
+            >
+              New Ingredient
+            </Button>
+            <Button
+              variant="contained"
+              // component={RouterLink}
+              // to="#"
+              onClick={handleOpenCreateCategory}
+              startIcon={<Iconify icon="eva:plus-fill" />}
+              style={{ marginLeft: '20px' }}
+            >
+              New Category
+            </Button>
+          </div>
         </Stack>
         <Box sx={{ width: '100%', typography: 'body1' }}>
           <TabContext value={valueTabIndex}>
@@ -322,6 +370,7 @@ export default function Material() {
               <TabList onChange={handleChangeTab} aria-label="lab API tabs example">
                 <Tab label="Ingredient List" value="1" />
                 <Tab label="Activity History" value="2" />
+                <Tab label="Update Ingredient Stock" value="3" />
               </TabList>
             </Box>
             <TabPanel value="1">
@@ -431,6 +480,59 @@ export default function Material() {
                 </div>
               </Box>
             </TabPanel>
+            <TabPanel value="3">
+              <TableContainer component={Paper}>
+                <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell align="center">No. </TableCell>
+                      <TableCell align="center">Ingredient Name</TableCell>
+                      <TableCell align="center">Quantity</TableCell>
+                      <TableCell align="center">Unit</TableCell>
+                      <TableCell align="center">Low Threshold</TableCell>
+                      <TableCell align="center">Quantity To Update</TableCell>
+
+                      <TableCell align="center" />
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {ingredients.map((item, index) => (
+                      <TableRow
+                        key={item.id}
+                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                      >
+                        <TableCell align="center">{index + 1}</TableCell>
+                        <TableCell align="center">{item.name}</TableCell>
+                        <TableCell align="center">{item.stock}</TableCell>
+                        <TableCell align="center">{item.unit}</TableCell>
+                        <TableCell align="center">{item.lowThreshold}</TableCell>
+                        <TableCell align="center">
+                          <input
+                            name="updatedStock"
+                            placeholder=""
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            onChange={(e) => setUpdatedStock(e.target.value)}
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <Button
+                            onClick={() => {
+                              localStorage.setItem('ingId', item.id);
+                              handleUpdateStock();
+                            }}
+                          >
+                            {' '}
+                            Update
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </TabPanel>
           </TabContext>
         </Box>
 
@@ -441,7 +543,17 @@ export default function Material() {
           aria-describedby="modal-modal-description"
         >
           <Box sx={style}>
-            <form className={classes.createIngredientStyle} onSubmit={handleSubmit}>
+            <form
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                height: '30em',
+                padding: '10px 20px 10px 20px',
+                justifyContent: 'space-around'
+              }}
+              onSubmit={handleSubmit}
+            >
               <Typography className={classes.title} variant="h4">
                 Add new ingredient
               </Typography>
@@ -498,7 +610,17 @@ export default function Material() {
           aria-describedby="modal-modal-description"
         >
           <Box sx={style}>
-            <form className={classes.createIngredientStyle} onSubmit={handleSet}>
+            <form
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                height: '30em',
+                padding: '10px 20px 10px 20px',
+                justifyContent: 'space-around'
+              }}
+              onSubmit={handleSet}
+            >
               <Typography className={classes.title} variant="h4">
                 Set Supplier
               </Typography>
@@ -536,7 +658,17 @@ export default function Material() {
           aria-describedby="modal-modal-description"
         >
           <Box sx={style}>
-            <form className={classes.createIngredientStyle} onSubmit={handleOrderIngredient}>
+            <form
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                height: '30em',
+                padding: '10px 20px 10px 20px',
+                justifyContent: 'space-around'
+              }}
+              onSubmit={handleOrderIngredient}
+            >
               <Typography className={classes.title} variant="h4">
                 Order Ingredient
               </Typography>

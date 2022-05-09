@@ -44,7 +44,7 @@ export default function DashboardApp(messsage) {
           }}
         >
           <Typography variant="h4" gutterBottom style={{ color: '#1C3F63' }}>
-            Hi, Welcome
+            Hi, Welcome back !
           </Typography>
           <Typography variant="h6" style={{ color: '#1C3F63' }}>
             {'Today: '} {getCurrentDate()}

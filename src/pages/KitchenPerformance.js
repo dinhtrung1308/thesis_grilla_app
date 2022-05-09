@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
+
 import { axios } from 'axios';
 // materialimport React, { useState } from 'react';
 import { Box, Grid, Container, Typography, Stack, TextField } from '@mui/material';
@@ -37,6 +38,9 @@ import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 import { width } from '@mui/system';
+import ChartTab3 from '../components/chartTab3';
+import ChartTab4 from '../components/chartTab4';
+
 import materialImage from '../assets/img/material.png';
 import Iconify from '../components/Iconify';
 // components
@@ -230,7 +234,8 @@ export default function KithenPerformance() {
               <TabList onChange={handleChangeTab} aria-label="lab API tabs example">
                 <Tab label="Customer Experience" value="1" />
                 <Tab label="Orders" value="2" />
-                <Tab label="Ingredients" value="3" />
+                <Tab label="Dish" value="3" />
+                <Tab label="Ingredient" value="4" />
               </TabList>
             </Box>
             <TabPanel value="1">
@@ -567,7 +572,12 @@ export default function KithenPerformance() {
               </Typography> */}
               <Card style={{ marginTop: 40 }}>
                 <CardHeader title="Total Orders and Income" />
-                <Grid container direction="row-reverse" alignItems="center">
+                <Grid
+                  container
+                  direction="row-reverse"
+                  alignItems="center"
+                  style={{ width: '95%' }}
+                >
                   <LocalizationProvider dateAdapter={AdapterDateFns}>
                     <DatePicker
                       value={endDayGraph1}
@@ -619,7 +629,12 @@ export default function KithenPerformance() {
                 </Box>
               </Card>
             </TabPanel>
-            <TabPanel value="3">Item Three</TabPanel>
+            <TabPanel value="3">
+              <ChartTab3 />
+            </TabPanel>
+            <TabPanel value="4">
+              <ChartTab4 />
+            </TabPanel>
           </TabContext>
         </Box>
       </Container>

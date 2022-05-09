@@ -32,14 +32,9 @@ const sidebarConfig = [
     icon: getIcon('carbon:delivery-truck')
   },
   {
-    title: 'Kitchen Perfromance',
+    title: 'Kitchen Performance',
     path: '/dashboard/kitchen',
     icon: getIcon('bi:graph-up')
-  },
-  {
-    title: 'Employee',
-    path: '/dashboard/user',
-    icon: getIcon('eva:people-fill')
   }
 ];
 

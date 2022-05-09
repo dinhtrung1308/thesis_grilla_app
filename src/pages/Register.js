@@ -40,47 +40,24 @@ const ContentStyle = styled('div')(({ theme }) => ({
 
 export default function Register() {
   return (
-    <RootStyle title="Register | Minimal-UI">
+    <RootStyle title="Register ">
       <AuthLayout>
         Already have an account? &nbsp;
-        <Link underline="none" variant="subtitle2" component={RouterLink} to="/login">
+        <Link underline="none" variant="subtitle2" component={RouterLink} to="/">
           Login
         </Link>
       </AuthLayout>
 
       <SectionStyle sx={{ display: { xs: 'none', md: 'flex' } }}>
         <Typography variant="h3" sx={{ px: 5, mt: 10, mb: 5 }}>
-          Manage the job more effectively with Minimal
+          Manage the kitchen more effectively with Grilla
         </Typography>
-        <img alt="register" src="/static/illustrations/illustration_register.png" />
+        <img alt="register" src="/static/illustrations/2396.jpg" />
       </SectionStyle>
 
       <Container>
         <ContentStyle>
-          <Box sx={{ mb: 5 }}>
-            <Typography variant="h4" gutterBottom>
-              Get started absolutely free.
-            </Typography>
-            <Typography sx={{ color: 'text.secondary' }}>
-              Free forever. No credit card needed.
-            </Typography>
-          </Box>
-
-          <AuthSocial />
-
           <RegisterForm />
-
-          <Typography variant="body2" align="center" sx={{ color: 'text.secondary', mt: 3 }}>
-            By registering, I agree to Minimal&nbsp;
-            <Link underline="always" color="textPrimary">
-              Terms of Service
-            </Link>
-            &nbsp;and&nbsp;
-            <Link underline="always" color="textPrimary">
-              Privacy Policy
-            </Link>
-            .
-          </Typography>
 
           <Typography
             variant="subtitle2"
@@ -91,7 +68,7 @@ export default function Register() {
             }}
           >
             Already have an account?&nbsp;
-            <Link underline="hover" to="/login" component={RouterLink}>
+            <Link u nderline="hover" to="/" component={RouterLink}>
               Login
             </Link>
           </Typography>
