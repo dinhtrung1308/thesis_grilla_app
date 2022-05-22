@@ -1,3 +1,5 @@
+import React, { useState, useEffect } from 'react';
+
 // material
 import { alpha, styled } from '@mui/material/styles';
 import { Card, Typography } from '@mui/material';
@@ -35,16 +37,55 @@ const IconWrapperStyle = styled('div')(({ theme }) => ({
 // ----------------------------------------------------------------------
 
 const TOTAL = 234;
-
+function getCurrentDate() {
+  const d = new Date();
+  const currentDate = String(d.getDate());
+  const currentMonth = String(d.getMonth() + 1);
+  const currentYear = String(d.getFullYear());
+  const today = currentYear.concat('/', currentMonth, '/', currentDate);
+  return today;
+}
 export default function AppBugReports() {
+  const [data, setData] = useState({});
+  const [startDay, setStartDay] = useState(getCurrentDate);
+
+  const token = sessionStorage.getItem('token');
+  const [refresh, setRefresh] = useState(false);
+  const getData = async () => {
+    const response = await fetch(
+      `http://103.116.105.48/api/performance/dishes-cooking-time?start=${startDay}`,
+      {
+        method: 'GET',
+        headers: new Headers({
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        })
+      }
+    );
+    const FinalData = await response.json();
+    setData(FinalData);
+  };
+  useEffect(() => {
+    // if (data && !refresh) {
+    //   return;
+    // }
+    getData();
+  }, [refresh]);
+  useEffect(() => {
+    if (refresh) {
+      setTimeout(() => {
+        setRefresh(false);
+      }, 50);
+    }
+  }, [refresh]);
   return (
     <RootStyle>
       <IconWrapperStyle>
-        <Iconify icon="ant-design:bug-filled" width={24} height={24} />
+        <Iconify icon="ic:outline-watch-later" width={24} height={24} />
       </IconWrapperStyle>
       <Typography variant="h3">{fShortenNumber(TOTAL)}</Typography>
       <Typography variant="subtitle2" sx={{ opacity: 0.72 }}>
-        Bug Reports
+        Late Dishes
       </Typography>
     </RootStyle>
   );

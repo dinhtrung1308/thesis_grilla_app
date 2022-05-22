@@ -212,7 +212,7 @@ function getCurrentDate() {
   const currentDate = String(d.getDate());
   const currentMonth = String(d.getMonth() + 1);
   const currentYear = String(d.getFullYear());
-  const today = currentYear.concat('-', currentMonth, '-', currentDate);
+  const today = currentYear.concat('/', currentMonth, '/', currentDate);
   return today;
 }
 function getCurrentTime() {
@@ -472,7 +472,6 @@ export default function Order() {
     console.log(idOrder);
     localStorage.setItem('idOrder', idOrder);
     const message = await updateStatusI2F({});
-    console.log(message.message);
     if (message.ok) {
       toast.success('Update Successfully!', { autoClose: 1000 });
       setRefresh(true);

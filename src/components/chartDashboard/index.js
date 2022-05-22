@@ -55,6 +55,7 @@ function get7PreviousDay() {
 function ChartTab3() {
   const [chart1Tab3, setChart1Tab3] = useState({ labels: [], dataset: [] });
   const [chart2Tab3, setChart2Tab3] = useState({ labels: [], dataset: [] });
+
   const [endDayTab3, setEndDayTab3] = useState(getCurrentDate);
   const [startDayTab3, setStartDayTab3] = useState(get7PreviousDay);
   const token = sessionStorage.getItem('token');
@@ -94,10 +95,11 @@ function ChartTab3() {
     );
     const FinalData = await response.json();
     localStorage.setItem('chart2Tab3', JSON.stringify(FinalData.dish));
+    console.log(response);
     if (response.ok) {
       const list = JSON.parse(localStorage.getItem('chart2Tab3'));
       const final = addColors(list);
-      console.log(final);
+
       setChart2Tab3(final);
       localStorage.removeItem('chart2Tab3');
     }
@@ -108,6 +110,8 @@ function ChartTab3() {
       return;
     }
     chart();
+  }, [refresh]);
+  useEffect(() => {
     chart2();
   }, [refresh]);
 
@@ -162,12 +166,6 @@ function ChartTab3() {
             height={400}
             options={options}
           />
-        </Box>
-      </Card>
-      <Card style={{ marginTop: 40 }}>
-        <CardHeader title="Total Dishes By Hours" />
-
-        <Box sx={{ p: 3, pb: 1 }} dir="ltr">
           <Bar
             data={{ labels: chart2Tab3.labels, datasets: chart2Tab3.dataset }}
             height={400}

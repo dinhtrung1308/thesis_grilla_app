@@ -1,8 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-
+import emailjs from '@emailjs/browser';
 // materialimport React, { useState } from 'react';
-import { Box, Grid, Container, Typography, Stack, Tabs, Tab, IconButton } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Container,
+  Typography,
+  Stack,
+  Tabs,
+  Tab,
+  IconButton,
+  Modal,
+  TextField
+} from '@mui/material';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
@@ -26,6 +37,7 @@ import materialImage from '../assets/img/material.png';
 import Iconify from '../components/Iconify';
 
 const PREFIX = 'Suppliers';
+// Change here
 
 const classes = {
   statusFinished: `${PREFIX}-statusFinished`,
@@ -48,7 +60,17 @@ const StyledPage = styled(Page)({
     color: '#fafafa'
   }
 });
-
+const style = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  bgcolor: '#fff',
+  border: '2px solid #000',
+  boxShadow: 24,
+  p: 4
+};
 // ----------------------------------------------------------------------
 
 function TabPanel(props) {
@@ -77,6 +99,18 @@ function a11yProps(index) {
     'aria-controls': `simple-tabpanel-${index}`
   };
 }
+async function createSupplier(obj) {
+  const token = sessionStorage.getItem('token');
+
+  return fetch('http://103.116.105.48/api/supplier', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(obj)
+  });
+}
 async function acceptInvoice(obj) {
   const idInvoice = localStorage.getItem('idInvoice');
   const TOKEN = sessionStorage.getItem('token');
@@ -91,19 +125,42 @@ async function acceptInvoice(obj) {
   });
 }
 const d = new Date();
-console.log(d);
 export default function Suppliers() {
   const [suppliers, setSuppliers] = useState([]);
   const [invoiceHistory, setInvoiceHistory] = useState([]);
   const [refresh, setRefresh] = useState(false);
-
+  const [supplierName, setSupplierName] = useState('');
+  const [supplierEmail, setSupplierEmail] = useState('');
+  const [phoneNumber, setSupplierPhoneNumber] = useState('');
+  const [openCreateSupplier, setOpenCreateSupplier] = useState(false);
+  const handleOpenCreateSupplier = () => setOpenCreateSupplier(true);
+  const handleCloseCreateSupplier = () => setOpenCreateSupplier(false);
   const token = sessionStorage.getItem('token');
   const [valueTab, setValueTab] = React.useState(0);
 
   const handleChange = (event, newValue) => {
     setValueTab(newValue);
   };
+  const handleSubmitEmail = (quantity, inName, unit, name, email, totalPrice) => {
+    console.log(quantity, inName, unit, email, totalPrice);
+    const templateParams = {
+      ingredient_name: inName,
+      ingredient_quantity: quantity,
+      ingredient_unit: unit,
+      supplier_name: name,
+      supplier_email: email,
+      total_price: totalPrice
+    };
 
+    emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY).then(
+      function (response) {
+        console.log('SUCCESS!', response.status, response.text);
+      },
+      function (error) {
+        console.log('FAILED...', error);
+      }
+    );
+  };
   const getSuppliers = async () => {
     const response = await fetch('http://103.116.105.48/api/supplier', {
       method: 'GET',
@@ -136,6 +193,21 @@ export default function Suppliers() {
       toast.error('Accept Unseccessfully!', { autoClose: 1000 });
     }
   };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const ingredientObject = await createSupplier({
+      name: supplierName,
+      email: supplierEmail,
+      phoneNumber
+    });
+    if (ingredientObject !== null) {
+      toast.success('Create Successfully!', { autoClose: 1000 });
+      setRefresh(true);
+      setOpenCreateSupplier(false);
+    } else {
+      toast.error('Create Unseccessfully!', { autoClose: 1000 });
+    }
+  };
   useEffect(() => {
     if (invoiceHistory.length && !refresh) {
       return;
@@ -160,9 +232,8 @@ export default function Suppliers() {
           </Typography>
           <Button
             variant="contained"
-            component={RouterLink}
-            to="#"
             startIcon={<Iconify icon="eva:plus-fill" />}
+            onClick={handleOpenCreateSupplier}
           >
             Add Supplier
           </Button>
@@ -186,9 +257,9 @@ export default function Suppliers() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {suppliers.map((supplier) => (
+                  {suppliers?.map((supplier, index) => (
                     <TableRow
-                      key={supplier.id}
+                      key={index}
                       sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                     >
                       <TableCell component="th" scope="row">
@@ -265,7 +336,17 @@ export default function Suppliers() {
                             return (
                               <IconButton
                                 aria-label="update"
-                                onClick={() => handleUpdateStatus(item.invoceId)}
+                                onClick={() => {
+                                  handleUpdateStatus(item.invoceId);
+                                  handleSubmitEmail(
+                                    item.amount,
+                                    item.ingredient.name,
+                                    item.unit,
+                                    item.supplier.name,
+                                    item.supplier.email,
+                                    item.invoicePrice
+                                  );
+                                }}
                                 size="large"
                               >
                                 <CheckIcon />
@@ -286,6 +367,65 @@ export default function Suppliers() {
           </TabPanel> */}
         </Box>
       </Container>
+      <Modal
+        open={openCreateSupplier}
+        onClose={handleCloseCreateSupplier}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={style}>
+          <form
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              height: '30em',
+              padding: '10px 20px 10px 20px',
+              justifyContent: 'space-around'
+            }}
+            onSubmit={handleSubmit}
+          >
+            <Typography className={classes.title} variant="h4">
+              Add new ingredient
+            </Typography>
+            <TextField
+              id="outlined-helperText"
+              label="Name of Supplier"
+              defaultValue=""
+              required
+              onChange={(e) => setSupplierName(e.target.value)}
+            />
+            <TextField
+              id="outlined-number"
+              label="Email"
+              type="email"
+              required
+              InputLabelProps={{
+                shrink: true
+              }}
+              onChange={(e) => setSupplierEmail(e.target.value)}
+            />
+            <TextField
+              id="outlined-number"
+              label="Phone Number"
+              type="number"
+              required
+              InputLabelProps={{
+                shrink: true
+              }}
+              onChange={(e) => setSupplierPhoneNumber(e.target.value)}
+            />
+
+            <Button variant="contained" type="submit">
+              Create
+            </Button>
+            {/* <Button variant="contained" component="label">
+                Upload File
+                <input type="file" accept="image/*" />
+              </Button> */}
+          </form>
+        </Box>
+      </Modal>
     </StyledPage>
   );
 }

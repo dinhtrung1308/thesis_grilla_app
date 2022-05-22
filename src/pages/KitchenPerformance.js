@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 
-import { axios } from 'axios';
 // materialimport React, { useState } from 'react';
 import { Box, Grid, Container, Typography, Stack, TextField } from '@mui/material';
 import Divider from '@mui/material/Divider';
@@ -20,15 +19,11 @@ import {
 import { Bar, Line } from 'react-chartjs-2';
 
 import Card from '@mui/material/Card';
-import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
 import DatePicker from '@mui/lab/DatePicker';
 import AdapterDateFns from '@mui/lab/AdapterDateFns';
 import { LocalizationProvider } from '@mui/lab';
-import CardMedia from '@mui/material/CardMedia';
-import Button from '@mui/material/Button';
-import Paper from '@mui/material/Paper';
 import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgress';
 import { styled } from '@mui/styles';
 
@@ -37,12 +32,10 @@ import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
-import { width } from '@mui/system';
+import QRCode from 'react-qr-code';
 import ChartTab3 from '../components/chartTab3';
 import ChartTab4 from '../components/chartTab4';
 
-import materialImage from '../assets/img/material.png';
-import Iconify from '../components/Iconify';
 // components
 import Page from '../components/Page';
 
@@ -95,7 +88,7 @@ function getCurrentDate() {
   const currentDate = String(d.getDate());
   const currentMonth = String(d.getMonth() + 1);
   const currentYear = String(d.getFullYear());
-  const today = currentYear.concat('-', currentMonth, '-', currentDate);
+  const today = currentYear.concat('/', currentMonth, '/', currentDate);
   return today;
 }
 function get7PreviousDay() {
@@ -103,7 +96,7 @@ function get7PreviousDay() {
   const last7Date = String(sevenDays.getDate());
   const changeMonth = String(sevenDays.getMonth() + 1);
   const currentYear = String(sevenDays.getFullYear());
-  const preDays = currentYear.concat('-', changeMonth, '-', last7Date);
+  const preDays = currentYear.concat('/', changeMonth, '/', last7Date);
 
   return preDays;
 }
@@ -118,6 +111,8 @@ export default function KithenPerformance() {
   const [dataOrders, setDataOrders] = useState([]);
   const [chartData1Tab2, setChartData1Tab2] = useState({});
   const [chartData2Tab2, setChartData2Tab2] = useState({});
+  const [chartData3Tab2, setChartData3Tab2] = useState({});
+
   const [totalOrders, setTotalOrders] = useState([]);
   const [dateArrays, setDateArrays] = useState([]);
   const handleChangeTab = (event, newValue) => {
@@ -126,6 +121,9 @@ export default function KithenPerformance() {
   // const [ingredients,setIngredients] =useState([]);
   const token = sessionStorage.getItem('token');
   // console.log(token);
+  const idUser = sessionStorage.getItem('idUser');
+  const QRCODE_ID = `https://survey-grilla.netlify.app/`;
+
   const getAspects = async () => {
     const response = await fetch('http://103.116.105.48/api/performance/feedback', {
       method: 'GET',
@@ -157,6 +155,7 @@ export default function KithenPerformance() {
       })
     });
     const FinalData = await response.json();
+    setFeedbackList((feedbackList) => [...feedbackList, ...FinalData]);
   };
   const fList = [];
   const chart = async () => {
@@ -204,9 +203,56 @@ export default function KithenPerformance() {
       });
     }
   };
+  const chart3 = async () => {
+    let totalOrders = [];
+    let hoursArray = [];
 
+    const response = await fetch(
+      `http://103.116.105.48/api/performance/order-by-hour?start=${startDayGraph1}&end=${endDayGraph1}`,
+      {
+        method: 'GET',
+        headers: new Headers({
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        })
+      }
+    );
+    const FinalData = await response.json();
+    totalOrders = FinalData.amount;
+    hoursArray = [
+      '8:00',
+      '9:00',
+      '10:00',
+      '11:00',
+      '12:00',
+      '13:00',
+      '14:00',
+      '15:00',
+      '16:00',
+      '17:00',
+      '18:00',
+      '19:00',
+      '20:00',
+      '21:00'
+    ];
+    if (response.ok) {
+      setChartData3Tab2({
+        labels: hoursArray,
+        datasets: [
+          {
+            label: 'Number of Orders By Hours',
+            data: totalOrders,
+            borderColor: '#1013dc',
+            backgroundColor: '#1013dc',
+            borderWidth: 4
+          }
+        ]
+      });
+    }
+  };
   useEffect(() => {
     chart();
+    chart3();
   }, [refresh]);
   useEffect(() => {
     getFeedbackList();
@@ -223,10 +269,33 @@ export default function KithenPerformance() {
   return (
     <Page title="Material">
       <Container maxWidth="xl">
-        <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
+        <Stack
+          direction="row"
+          alignItems="baseline"
+          justifyContent="space-between"
+          mb={5}
+          width="90%"
+        >
           <Typography variant="h4" gutterBottom>
             Kithen Performance
           </Typography>
+          <div
+            style={{
+              background: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              flexDirection: 'column'
+            }}
+          >
+            <div>
+              <QRCode
+                id="qrCodeEl"
+                size={150}
+                value={QRCODE_ID + idUser}
+                onClick={(e) => console.log(e.target.value)}
+              />
+            </div>
+          </div>
         </Stack>
         <Box sx={{ width: '100%', typography: 'body1' }}>
           <TabContext value={valueIndexTab}>
@@ -395,11 +464,10 @@ export default function KithenPerformance() {
                       }}
                       fullWidth
                     >
-                      {fList?.map((item, index) => (
-                        <div key={item.feedbackId} style={{ width: '100%', marginLeft: '40px' }}>
+                      {feedbackList?.map((item, index) => (
+                        <div key={index} style={{ width: '100%', marginLeft: '40px' }}>
                           <Card
                             sx={{ minWidth: 275, width: '90%', marginTop: '30px', borderRadius: 0 }}
-                            key={item.feedbackId}
                           >
                             <CardContent>
                               {/* <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
@@ -571,7 +639,7 @@ export default function KithenPerformance() {
                 {dataOrders.retailPrice} {' $'}
               </Typography> */}
               <Card style={{ marginTop: 40 }}>
-                <CardHeader title="Total Orders and Income" />
+                <CardHeader title="Total Orders and Income By Day" />
                 <Grid
                   container
                   direction="row-reverse"
@@ -582,7 +650,7 @@ export default function KithenPerformance() {
                     <DatePicker
                       value={endDayGraph1}
                       onChange={(newValue) => {
-                        setEndDayGraph1(moment(newValue).format('YYYY-MM-DD'));
+                        setEndDayGraph1(moment(newValue).format('YYYY/MM/DD'));
                         setRefresh(true);
                       }}
                       renderInput={(params) => <TextField {...params} />}
@@ -592,7 +660,7 @@ export default function KithenPerformance() {
                       value={startDayGraph1}
                       style={{ size: '10px' }}
                       onChange={(newValue) => {
-                        setStartDayGraph1(moment(newValue).format('YYYY-MM-DD'));
+                        setStartDayGraph1(moment(newValue).format('YYYY/MM/DD'));
                         setRefresh(true);
                       }}
                       renderInput={(params) => <TextField {...params} />}
@@ -625,7 +693,32 @@ export default function KithenPerformance() {
                     }}
                     data={chartData2Tab2}
                   />
+                  <Divider />
                   {/* <Line options={options} data={data} /> */}
+                  <Bar
+                    options={{
+                      responsive: true,
+                      plugins: {
+                        legend: {
+                          position: 'top'
+                        },
+                        title: {
+                          display: true,
+                          text: 'Total Order per Hour'
+                        },
+                        scales: {
+                          y: [
+                            {
+                              grid: {
+                                drawOnChartArea: false
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }}
+                    data={chartData3Tab2}
+                  />
                 </Box>
               </Card>
             </TabPanel>

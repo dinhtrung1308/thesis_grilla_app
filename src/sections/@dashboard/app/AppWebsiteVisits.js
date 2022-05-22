@@ -1,68 +1,98 @@
-import { merge } from 'lodash';
-import ReactApexChart from 'react-apexcharts';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 // material
 import { Card, CardHeader, Box } from '@mui/material';
 //
-import { BaseOptionChart } from '../../../components/charts';
-
+import { Bar, Line } from 'react-chartjs-2';
+import { map } from 'lodash';
 // ----------------------------------------------------------------------
-
-const CHART_DATA = [
-  {
-    name: 'Team A',
-    type: 'column',
-    data: [23, 11, 22, 27, 13, 22, 37, 21, 44, 22, 30]
-  },
-  {
-    name: 'Team B',
-    type: 'area',
-    data: [44, 55, 41, 67, 22, 43, 21, 41, 56, 27, 43]
-  },
-  {
-    name: 'Team C',
-    type: 'line',
-    data: [30, 25, 36, 30, 45, 35, 64, 52, 59, 36, 39]
-  }
-];
-
-export default function AppWebsiteVisits() {
-  const chartOptions = merge(BaseOptionChart(), {
-    stroke: { width: [0, 2, 3] },
-    plotOptions: { bar: { columnWidth: '11%', borderRadius: 4 } },
-    fill: { type: ['solid', 'gradient', 'solid'] },
-    labels: [
-      '01/01/2003',
-      '02/01/2003',
-      '03/01/2003',
-      '04/01/2003',
-      '05/01/2003',
-      '06/01/2003',
-      '07/01/2003',
-      '08/01/2003',
-      '09/01/2003',
-      '10/01/2003',
-      '11/01/2003'
-    ],
-    xaxis: { type: 'datetime' },
-    tooltip: {
-      shared: true,
-      intersect: false,
-      y: {
-        formatter: (y) => {
-          if (typeof y !== 'undefined') {
-            return `${y.toFixed(0)} visits`;
+export const options = {
+  responsive: true,
+  plugins: {
+    legend: {
+      position: 'top'
+    },
+    title: {
+      display: true,
+      text: 'Total Order per Day'
+    },
+    scales: {
+      y: [
+        {
+          grid: {
+            drawOnChartArea: false
           }
-          return y;
         }
-      }
+      ]
     }
-  });
+  }
+};
+function getCurrentDate() {
+  const d = new Date();
+  const currentDate = String(d.getDate());
+  const currentMonth = String(d.getMonth() + 1);
+  const currentYear = String(d.getFullYear());
+  const today = currentYear.concat('/', currentMonth, '/', currentDate);
+  return today;
+}
+function get7PreviousDay() {
+  const sevenDays = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000);
+  const last7Date = String(sevenDays.getDate());
+  const changeMonth = String(sevenDays.getMonth() + 1);
+  const currentYear = String(sevenDays.getFullYear());
+  const preDays = currentYear.concat('/', changeMonth, '/', last7Date);
+
+  return preDays;
+}
+export default function AppWebsiteVisits() {
+  const [startDayGraph1, setStartDayGraph1] = useState(get7PreviousDay);
+  const [endDayGraph1, setEndDayGraph1] = useState(getCurrentDate);
+  const [chartData1Tab2, setChartData1Tab2] = useState({});
+
+  const token = sessionStorage.getItem('token');
+
+  useEffect(() => {
+    let totalOrders = [];
+    let dateArrays = [];
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+    axios
+      .get(
+        `http://103.116.105.48/api/performance/order-amount-by-day?start=${startDayGraph1}&end=${endDayGraph1}`,
+        config
+      )
+      .then((res) => {
+        totalOrders = res.data.amount;
+        dateArrays = res.data.dates;
+        const a = {
+          labels: dateArrays,
+          datasets: [
+            {
+              label: 'Number of Orders',
+              data: totalOrders,
+              borderColor: '#FFD992',
+              backgroundColor: '#FFD992',
+              borderWidth: 4
+            }
+          ]
+        };
+        localStorage.setItem('dashboard', JSON.stringify(a));
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
+  const b = JSON.parse(localStorage.getItem('dashboard'));
 
   return (
     <Card>
-      <CardHeader title="Website Visits" subheader="(+43%) than last year" />
+      <CardHeader title="Total Order In Seven Days" />
       <Box sx={{ p: 3, pb: 1 }} dir="ltr">
-        <ReactApexChart type="line" series={CHART_DATA} options={chartOptions} height={364} />
+        <Bar options={options} data={b} />
       </Box>
     </Card>
   );

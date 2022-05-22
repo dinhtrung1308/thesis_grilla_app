@@ -33,10 +33,10 @@ export default function LoginForm(setToken) {
       password
     });
     // setToken(token);'
-    console.log(token);
     if ('access_token' in token) {
       sessionStorage.setItem('token', token.access_token);
       sessionStorage.setItem('account', token.username);
+      sessionStorage.setItem('idUser', token.user.id);
       toast.success('Login Successful!', { autoClose: 1000 });
       navigate('/dashboard/app');
     } else {

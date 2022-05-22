@@ -6,6 +6,7 @@ import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout';
 import TakeoutDiningIcon from '@mui/icons-material/TakeoutDining';
 import { ToastContainer, toast } from 'react-toastify';
 import moment from 'moment';
+import EditIcon from '@mui/icons-material/Edit';
 
 // materialimport React, { useState } from 'react';
 import {
@@ -25,6 +26,7 @@ import {
   MenuItem,
   InputLabel,
   IconButton,
+  Autocomplete,
   Paper
 } from '@mui/material';
 import Table from '@mui/material/Table';
@@ -38,6 +40,7 @@ import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
@@ -160,6 +163,8 @@ export default function Material() {
   const [activityRecord, setActivityRecord] = useState([]);
   const [ingredientId, setMaterial] = useState();
   const [openCategory, setOpenCategory] = React.useState(false);
+  const [optionsFilter, setOptionsFilter] = useState([]);
+  const [typeName, setTypeName] = useState('');
 
   const handleOpenCreateCategory = () => setOpenCategory(true);
 
@@ -177,13 +182,16 @@ export default function Material() {
   };
   const token = sessionStorage.getItem('token');
   const getIngredients = async () => {
-    const response = await fetch('http://103.116.105.48/api/inventory/ingredient', {
-      method: 'GET',
-      headers: new Headers({
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      })
-    });
+    const response = await fetch(
+      `http://103.116.105.48/api/inventory/ingredient?categoryName=${typeName}`,
+      {
+        method: 'GET',
+        headers: new Headers({
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        })
+      }
+    );
     const FinalData = await response.json();
     setIngredients(FinalData);
   };
@@ -198,12 +206,24 @@ export default function Material() {
     const FinalData = await response.json();
     setActivityRecord(FinalData);
   };
+  const getOptionsFilter = async () => {
+    const response = await fetch('http://103.116.105.48/api/inventory/category/get', {
+      method: 'GET',
+      headers: new Headers({
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      })
+    });
+    const FinalData = await response.json();
+    setOptionsFilter(FinalData);
+  };
   useEffect(() => {
     if (ingredients.length && !refresh) {
       return;
     }
     getIngredients();
     getActivityRecord();
+    getOptionsFilter();
   }, [refresh]);
   const getSuppliers = async () => {
     const response = await fetch('http://103.116.105.48/api/supplier', {
@@ -375,9 +395,49 @@ export default function Material() {
             </Box>
             <TabPanel value="1">
               <Grid container spacing={3}>
+                <Grid item xs={12} sm={12} md={12}>
+                  <Autocomplete
+                    disablePortal
+                    id="combo-box-demo"
+                    options={optionsFilter?.map((option) => option.name)}
+                    sx={{ width: 150 }}
+                    onChange={(event, value) => {
+                      if (value !== null) {
+                        setTypeName(value);
+                        setRefresh(true);
+                      } else if (value === null) {
+                        setTypeName('');
+                        setRefresh(true);
+                      }
+                    }}
+                    renderInput={(params) => <TextField {...params} label="Category" />}
+                  />
+                </Grid>
                 {ingredients?.map((ingredient) => (
                   <Grid item xs={12} sm={6} md={3} key={ingredient.id}>
                     <Card sx={{ maxWidth: 345 }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'row',
+                          alignItems: 'baseline',
+                          justifyContent: 'space-between'
+                        }}
+                      >
+                        <Typography marginLeft={3}>
+                          {'Category : '}
+                          {ingredient.ingredientCategory === null
+                            ? 'Undefined'
+                            : ingredient.ingredientCategory.name}
+                        </Typography>
+                        <IconButton
+                          aria-label="edit"
+                          // onClick={() => handleOpenSetCategory(elementDish.id)}
+                          size="large"
+                        >
+                          <EditIcon />
+                        </IconButton>
+                      </div>
                       <CardMedia component="img" height="140" image={materialImage} alt="tomato" />
                       <CardContent>
                         <Typography gutterBottom variant="h6" component="div">

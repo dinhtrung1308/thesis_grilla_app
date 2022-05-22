@@ -54,6 +54,8 @@ function get7PreviousDay() {
 }
 function ChartTab4() {
   const [chart1Tab3, setChart1Tab3] = useState({ labels: [], dataset: [] });
+  const [chart2Tab4, setChart2Tab4] = useState({ labels: [], dataset: [] });
+
   const [endDayTab3, setEndDayTab3] = useState(getCurrentDate);
   const [startDayTab3, setStartDayTab3] = useState(get7PreviousDay);
   const token = sessionStorage.getItem('token');
@@ -71,21 +73,42 @@ function ChartTab4() {
       }
     );
     const FinalData = await response.json();
-    localStorage.setItem('chart1Tab3', JSON.stringify(FinalData));
+    localStorage.setItem('chart1Tab4', JSON.stringify(FinalData));
     if (response.ok) {
-      const list = JSON.parse(localStorage.getItem('chart1Tab3'));
+      const list = JSON.parse(localStorage.getItem('chart1Tab4'));
       const final = addColors(list);
 
       setChart1Tab3(final);
-      localStorage.removeItem('chart1Tab3');
+      localStorage.removeItem('chart1Tab4');
     }
   };
-
+  const chart2 = async () => {
+    const response = await fetch(
+      `http://103.116.105.48/api/performance/performance-by-hour?start=${startDayTab3}&end=${endDayTab3}`,
+      {
+        method: 'GET',
+        headers: new Headers({
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        })
+      }
+    );
+    const FinalData = await response.json();
+    localStorage.setItem('chart2Tab4', JSON.stringify(FinalData.ingredient));
+    if (response.ok) {
+      const list = JSON.parse(localStorage.getItem('chart2Tab4'));
+      const final = addColors(list);
+      console.log(final);
+      setChart2Tab4(final);
+      localStorage.removeItem('chart2Tab4');
+    }
+  };
   useEffect(() => {
     if (chart1Tab3.length && !refresh) {
       return;
     }
     chart();
+    chart2();
   }, [refresh]);
   useEffect(() => {
     if (refresh) {
@@ -135,6 +158,17 @@ function ChartTab4() {
         <Box sx={{ p: 3, pb: 1 }} dir="ltr">
           <Bar
             data={{ labels: chart1Tab3.labels, datasets: chart1Tab3.dataset }}
+            height={400}
+            options={options}
+          />
+        </Box>
+      </Card>
+      <Card style={{ marginTop: 40 }}>
+        <CardHeader title="Total Used Amount of Ingredient By Hours" />
+
+        <Box sx={{ p: 3, pb: 1 }} dir="ltr">
+          <Bar
+            data={{ labels: chart2Tab4.labels, datasets: chart2Tab4.dataset }}
             height={400}
             options={options}
           />
